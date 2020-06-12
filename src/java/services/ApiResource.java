@@ -45,6 +45,9 @@ public class ApiResource {
      * Retrieves representation of an instance of services.ApiResource
      * @return an instance of java.lang.String
      */
+    
+    
+    // get all bands
     @GET
     @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
@@ -62,6 +65,8 @@ public class ApiResource {
         JSONObject jsonObject = new JSONObject(s);
         return s;
     }
+    
+    ////////////////////////////////////////////// BAND /////////////////////////////////////////////////////
     @GET
     @Path("/bands/{objectId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -72,7 +77,6 @@ public class ApiResource {
         ObjectId id = new ObjectId(objectId);
         DBCollection collection = database.getCollection("artists");
         BasicDBObject searchQuery = new BasicDBObject();
-        
         searchQuery.put("_id", id);
         DBCursor cursor = collection.find(searchQuery);
         String s = new String();
@@ -83,7 +87,6 @@ public class ApiResource {
 //        JSONObject jsonObject = new JSONObject(s);
         return s;
     }
-    
     
     @POST
     @Path("/addBand/{bandName}/{url}/{bio}")
@@ -99,6 +102,31 @@ public class ApiResource {
         document.put("imageUrl", url);
         collection.insert(document);
         return "posted";
+    }
+    
+    /////////////////////////////////////////ALBUM /////////////////////////////////////////
+    @GET
+    @Path("/getAlbums/{bandId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getAlbumsFromBand(@PathParam("bandId")String bandId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("albums.label", 1);
+        fields.put("albums.songs.nazwa", 1);
+        DBCursor cursor = collection.find(whereQuery, fields);
+        String s = new String();
+        while (cursor.hasNext()) {
+            s+=cursor.next();
+        }
+        System.out.println(s);
+//        JSONObject jsonObject = new JSONObject(s);
+        return s;
     }
     
     
