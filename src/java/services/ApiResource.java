@@ -16,6 +16,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PUT;
 import javax.ws.rs.PathParam;
@@ -81,6 +82,23 @@ public class ApiResource {
         System.out.println(s);
 //        JSONObject jsonObject = new JSONObject(s);
         return s;
+    }
+    
+    
+    @POST
+    @Path("/addBand/{bandName}/{url}/{bio}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String postBand(@PathParam("bandName") String bandName, @PathParam("url") String url, @PathParam("bio") String bio) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject document = new BasicDBObject();
+        document.put("nazwa", bandName);
+        document.put("bio", bio);
+        document.put("imageUrl", url);
+        collection.insert(document);
+        return "posted";
     }
     
     
