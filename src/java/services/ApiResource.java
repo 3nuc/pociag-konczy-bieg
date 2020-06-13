@@ -132,6 +132,28 @@ public class ApiResource {
 //        JSONObject jsonObject = new JSONObject(s);
         return s;
     }
+    @GET
+    @Path("/getSongsFromAlbum/{albumId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getSongFromAlbumId(@PathParam("albumId")String albumId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(albumId);
+        whereQuery.put("albums._id",id);
+        BasicDBObject fields = new BasicDBObject();
+        fields.put("albums.songs.nazwa", 1);
+        DBCursor cursor = collection.find(whereQuery, fields);
+        String s = new String();
+        while (cursor.hasNext()) {
+            s+=cursor.next();
+        }
+        System.out.println(s);
+//        JSONObject jsonObject = new JSONObject(s);
+        return s;
+    }
     
     @POST
     @Path("/addAlbum/{bandId}/{label}/{year}/{url}")
@@ -310,21 +332,6 @@ public class ApiResource {
         return "removed";
     }
     
-    @DELETE
-    @Path("removeArtistWithBasicAuth/{bandId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String deleteArtistWithAuth(@PathParam("bandId") String bandId) throws UnknownHostException{
-        MongoClient mongoClient = new MongoClient("localhost", 27017);
-        DB database = mongoClient.getDB("artists");
-        boolean auth = database.authenticate("admin", "admin".toCharArray());
-        DBCollection collection = database.getCollection("artists");
-        BasicDBObject whereQuery = new BasicDBObject();
-        ObjectId id = new ObjectId(bandId);
-        whereQuery.put("_id",id);
-        collection.remove(whereQuery);
-        
-        return "removed";
-    }
     
     @GET
     @Produces(MediaType.APPLICATION_XML)
