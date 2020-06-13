@@ -152,6 +152,63 @@ public class ApiResource {
         return "added";
     }
     
+    @POST
+    @Path("/addSong/{bandId}/{albumId}/{nazwa}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String addSongToAlbum(@PathParam("bandId") String bandId, @PathParam("albumId") String albumId,@PathParam("nazwa") String nazwa) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        ObjectId album = new ObjectId(albumId);
+        whereQuery.put("_id",id);
+        whereQuery.put("albums._id", album);
+        ObjectId id2= new ObjectId();
+        String json = 
+"	{$push: {\"albums.$.songs\" : {\"_id\":\""+id2+"\",\"nazwa\":\""+nazwa+"\"}}}";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "added";
+    }
+    
+    @POST
+    @Path("/addComment/{albumId}/{songNo}/{name}/{comment}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String addComment(@PathParam("albumId") String albumId, @PathParam("songNo") String songNo ,@PathParam("name") String name, @PathParam("comment") String comment) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(albumId);
+        ObjectId commentId = new ObjectId();
+        whereQuery.put("albums._id",id);
+        String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".Comments\": {\"_id\":\""+commentId+"\",name: \""+name+"\", comment:\""+comment+"\"} } }";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "added";
+    }
+    
+    @POST
+    @Path("/addRating/{albumId}/{songNo}/{rating}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String addRating(@PathParam("albumId") String albumId, @PathParam("songNo") String songNo ,@PathParam("rating") String rating) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(albumId);
+        ObjectId commentId = new ObjectId();
+        whereQuery.put("albums._id",id);
+        String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".ratings\":"+rating+"    } }";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "added";
+    }
+    
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public String getXml() {
