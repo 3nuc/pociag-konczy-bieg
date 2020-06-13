@@ -92,7 +92,7 @@ public class ApiResource {
     }
     
     @POST
-    @Path("/addBand/{bandName}/{url}/{bio}")
+    @Path("/addArtist/{bandName}/{url}/{bio}")
     @Produces(MediaType.APPLICATION_JSON)
     public String postBand(@PathParam("bandName") String bandName, @PathParam("url") String url, @PathParam("bio") String bio) throws UnknownHostException{
         MongoClient mongoClient = new MongoClient("localhost", 27017);
