@@ -142,7 +142,7 @@ public class ApiResource {
         DBCollection collection = database.getCollection("artists");
         BasicDBObject whereQuery = new BasicDBObject();
         ObjectId id = new ObjectId(albumId);
-        whereQuery.put("albums._id",id);
+        whereQuery.put("albums._id",albumId);
         BasicDBObject fields = new BasicDBObject();
         fields.put("albums.songs.nazwa", 1);
         DBCursor cursor = collection.find(whereQuery, fields);
@@ -187,13 +187,13 @@ public class ApiResource {
         ObjectId id = new ObjectId(bandId);
         ObjectId album = new ObjectId(albumId);
         whereQuery.put("_id",id);
-        whereQuery.put("albums._id", album);
+        whereQuery.put("albums._id", album.toString());
         ObjectId id2= new ObjectId();
         String json = 
 "	{$push: {\"albums.$.songs\" : {\"_id\":\""+id2+"\",\"nazwa\":\""+nazwa+"\"}}}";
         DBObject push = (DBObject) JSON.parse(json);
         collection.update(whereQuery,push);
-        return "added";
+        return album.toString();
     }
     
     @POST
@@ -207,7 +207,7 @@ public class ApiResource {
         BasicDBObject whereQuery = new BasicDBObject();
         ObjectId id = new ObjectId(albumId);
         ObjectId commentId = new ObjectId();
-        whereQuery.put("albums._id",id);
+        whereQuery.put("albums._id",albumId);
         String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".Comments\": {\"_id\":\""+commentId+"\",name: \""+name+"\", comment:\""+comment+"\"} } }";
         DBObject push = (DBObject) JSON.parse(json);
         collection.update(whereQuery,push);
@@ -225,7 +225,7 @@ public class ApiResource {
         BasicDBObject whereQuery = new BasicDBObject();
         ObjectId id = new ObjectId(albumId);
         ObjectId commentId = new ObjectId();
-        whereQuery.put("albums._id",id);
+        whereQuery.put("albums._id",albumId);
         DBCursor cursor = collection.find(whereQuery);
         String s = new String();
         while (cursor.hasNext()) {
@@ -258,11 +258,45 @@ public class ApiResource {
         BasicDBObject whereQuery = new BasicDBObject();
         ObjectId id = new ObjectId(albumId);
         ObjectId commentId = new ObjectId();
-        whereQuery.put("albums._id",id);
+        whereQuery.put("albums._id",albumId);
         String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".ratings\":"+rating+"    } }";
         DBObject push = (DBObject) JSON.parse(json);
         collection.update(whereQuery,push);
         return "added";
+    }
+    
+    
+    @POST
+    @Path("/addRating2/{albumId}/{songId}/{rating}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String addRating2(@PathParam("albumId") String albumId, @PathParam("songId") String songId , @PathParam("rating") int rating) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(albumId);
+        ObjectId commentId = new ObjectId();
+        whereQuery.put("albums._id",albumId);
+        DBCursor cursor = collection.find(whereQuery);
+        String s = new String();
+        while (cursor.hasNext()) {
+            s+=cursor.next();
+        }
+        System.out.println(s);
+        int songNo=0; //sprawdza numer piosenki w albumie
+        String[] words = s.split(" ");
+        for(int i=0;i<words.length;i++){
+            if(words[i].contains("ratings"))
+                songNo++;
+            if(words[i].contains(songId))
+                break;
+        }
+        String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".ratings\":"+rating+"} } }";
+//        String json = " ";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "added rating to song no"+songNo;
     }
     
     @PUT
@@ -328,6 +362,39 @@ public class ApiResource {
         ObjectId id = new ObjectId(bandId);
         whereQuery.put("_id",id);
         collection.remove(whereQuery);
+        
+        return "removed";
+    }
+    
+    @DELETE
+    @Path("removeAlbum/{albumId}")
+    @Produces(MediaType.APPLICATION_JSON) //rozpierdala cala baze, jeszcze nie wiem dlaczego
+    public String deleteAlbum(@PathParam("albumId") String albumId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(albumId);
+        whereQuery.put("albums._id",id);
+        DBCursor cursor = collection.find(whereQuery);
+        String s = new String();
+        while (cursor.hasNext()) {
+            s+=cursor.next();
+        }
+        int labelCount=0; //sprawdza numer albumu u artysty
+        String[] words = s.split(" ");
+        for(int i=0;i<words.length;i++){
+            if(words[i].contains("label"))
+                labelCount++;
+            if(words[i].contains(albumId))
+                break;
+        }
+        System.out.println(s);
+//        String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".Comments\": {\"_id\":\""+commentId+"\",name: \""+name+"\", comment:\""+comment+"\"} } }";
+        String json = " ";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
         
         return "removed";
     }
