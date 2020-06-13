@@ -25,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 import org.bson.types.ObjectId;
 import org.json.JSONObject;
 import com.mongodb.util.JSON;
+import javax.ws.rs.DELETE;
 
 /**
  * REST Web Service
@@ -70,7 +71,7 @@ public class ApiResource {
     
     ////////////////////////////////////////////// BAND /////////////////////////////////////////////////////
     @GET
-    @Path("/bands/{objectId}")
+    @Path("/artists/{objectId}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getBandFromId(@PathParam("objectId") String objectId) throws UnknownHostException{
         MongoClient mongoClient = new MongoClient("localhost", 27017);
@@ -291,6 +292,38 @@ public class ApiResource {
         DBObject push = (DBObject) JSON.parse(json);
         collection.update(whereQuery,push);
         return "modified name";
+    }
+    
+    @DELETE
+    @Path("removeArtist/{bandId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteArtist(@PathParam("bandId") String bandId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        collection.remove(whereQuery);
+        
+        return "removed";
+    }
+    
+    @DELETE
+    @Path("removeArtistWithBasicAuth/{bandId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteArtistWithAuth(@PathParam("bandId") String bandId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        collection.remove(whereQuery);
+        
+        return "removed";
     }
     
     @GET
