@@ -242,6 +242,57 @@ public class ApiResource {
         return "added";
     }
     
+    @PUT
+    @Path("editBio/{bandId}/{newBio}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String editBio(@PathParam("bandId") String bandId, @PathParam("newBio") String bio) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        String json="{$set: {bio: \""+bio+"\"}}";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "modified bio";
+    }
+    
+    @PUT
+    @Path("editArtistImage/{bandId}/{newImage}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String editArtistImage(@PathParam("bandId") String bandId, @PathParam("newImage") String image) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        String json="{$set: {imageUrl: \""+image+"\"}}";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "modified image";
+    }
+    
+    @PUT
+    @Path("editArtistName/{bandId}/{newName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String editArtistName(@PathParam("bandId") String bandId, @PathParam("newName") String name) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        String json="{$set: {nazwa: \""+name+"\"}}";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "modified name";
+    }
+    
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public String getXml() {
