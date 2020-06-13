@@ -9,6 +9,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import java.net.UnknownHostException;
 import javax.ws.rs.core.Context;
@@ -23,6 +24,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import org.bson.types.ObjectId;
 import org.json.JSONObject;
+import com.mongodb.util.JSON;
 
 /**
  * REST Web Service
@@ -105,6 +107,7 @@ public class ApiResource {
     }
     
     /////////////////////////////////////////ALBUM /////////////////////////////////////////
+    //wyswietlenie nazw albumow i piosenek w nich
     @GET
     @Path("/getAlbums/{bandId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -129,6 +132,25 @@ public class ApiResource {
         return s;
     }
     
+    @POST
+    @Path("/addAlbum/{bandId}/{label}/{year}/{url}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String addAlbumToBand(@PathParam("bandId") String bandId, @PathParam("label") String label,@PathParam("year") int year,@PathParam("url") String url ) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(bandId);
+        whereQuery.put("_id",id);
+        ObjectId id2= new ObjectId();
+        String json = 
+"	{$push: {\"albums\" : {_id:\""+id2+"\",label:\""+label+"\", year:"+year+", imageUrl: \""+url+"\"}\n" +
+"	}}";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "added";
+    }
     
     @GET
     @Produces(MediaType.APPLICATION_XML)
