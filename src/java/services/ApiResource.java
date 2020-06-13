@@ -192,6 +192,39 @@ public class ApiResource {
     }
     
     @POST
+    @Path("/addComment2/{albumId}/{songId}/{name}/{comment}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String addComment2(@PathParam("albumId") String albumId, @PathParam("songId") String songId ,@PathParam("name") String name, @PathParam("comment") String comment) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(albumId);
+        ObjectId commentId = new ObjectId();
+        whereQuery.put("albums._id",id);
+        DBCursor cursor = collection.find(whereQuery);
+        String s = new String();
+        while (cursor.hasNext()) {
+            s+=cursor.next();
+        }
+        System.out.println(s);
+        int songNo=0; //sprawdza numer piosenki w albumie
+        String[] words = s.split(" ");
+        for(int i=0;i<words.length;i++){
+            if(words[i].contains("Comments"))
+                songNo++;
+            if(words[i].contains(songId))
+                break;
+        }
+        String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".Comments\": {\"_id\":\""+commentId+"\",name: \""+name+"\", comment:\""+comment+"\"} } }";
+//        String json = " ";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return "added comment to song no"+songNo;
+    }
+    
+    @POST
     @Path("/addRating/{albumId}/{songNo}/{rating}")
     @Produces(MediaType.APPLICATION_JSON)
     public String addRating(@PathParam("albumId") String albumId, @PathParam("songNo") String songNo ,@PathParam("rating") String rating) throws UnknownHostException{
