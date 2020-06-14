@@ -64,9 +64,11 @@ public class ApiResource {
         BasicDBObject searchQuery = new BasicDBObject();
         DBCursor cursor = collection.find();
         String s = new String();
+        s+="{\"artists\" : [";
         while (cursor.hasNext()) {
-            s+=cursor.next();
+            s+=cursor.next()+",";
         }
+        s+="]}";
         JSONObject jsonObject = new JSONObject(s);
         return s;
     }
@@ -392,6 +394,33 @@ public class ApiResource {
         return "modified name";
     }
     
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/editArtist/{artistId}")
+    public String editArtist(Artist a, @PathParam("artistId") String artistId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(artistId);
+        whereQuery.put("_id",id);
+        String nazwa="";
+        String bio="";
+        String imageUrl="";
+        String json="{$set: {nazwa: \""+a.getNazwa()+"\"}}";
+        String json2="{$set: {bio: \""+a.getBio()+"\", nazwa:\""+a.getNazwa()+"\", imageUrl: \""+a.getImageUrl()+"\"}}";
+//        if(a.getNazwa()!=null)
+//            nazwa="nazwa: \""+a.getNazwa()+"\",";
+//        if(a.getImageUrl()!=null)
+//            imageUrl="imageUrl: \""+a.getImageUrl()+"\",";
+//        if(a.getBio()!=null)
+//            imageUrl="bio: \""+a.getBio()+"\"";
+        DBObject push = (DBObject) JSON.parse(json2);
+        collection.update(whereQuery,push);
+        return "modified artist ";
+    }
+    
     @DELETE
     @Path("removeArtist/{bandId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -440,6 +469,7 @@ public class ApiResource {
         
         return "removed";
     }
+    
     
     
     @GET
