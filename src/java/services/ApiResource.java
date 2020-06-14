@@ -5,6 +5,8 @@
  */
 package services;
 
+import artist.Album;
+import artist.Artist;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -104,7 +106,47 @@ public class ApiResource {
         document.put("bio", bio);
         document.put("imageUrl", url);
         collection.insert(document);
-        return "posted";
+        return "added";
+    }
+    
+    @POST
+    @Path("/addArtistWithBody")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String postArtist(Artist a) throws UnknownHostException{
+        System.out.println(a.toString());
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject document = new BasicDBObject();
+        document.put("nazwa", a.getNazwa());
+        document.put("bio", a.getBio());
+        document.put("imageUrl", a.getImageUrl());
+        collection.insert(document);
+        return a.toString();
+    }
+    
+    
+    @POST
+    @Path("/addAlbumWithBody")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String postAlbum(Album a) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        ObjectId id = new ObjectId(a.getArtistId());
+        whereQuery.put("_id",id);
+        ObjectId id2= new ObjectId();
+        String json = 
+"	{$push: {\"albums\" : {_id:\""+id2+"\",label:\""+a.getName()+"\", year:"+a.getYear()+", imageUrl: \""+a.getLabelUrl()+"\"}\n" +
+"	}}";
+        DBObject push = (DBObject) JSON.parse(json);
+        collection.update(whereQuery,push);
+        return a.getName();
     }
     
     /////////////////////////////////////////ALBUM /////////////////////////////////////////
