@@ -68,6 +68,7 @@ public class ApiResource {
         while (cursor.hasNext()) {
             s+=cursor.next()+",";
         }
+        s=s.substring(0, s.length() - 1);
         s+="]}";
         JSONObject jsonObject = new JSONObject(s);
         return s;
