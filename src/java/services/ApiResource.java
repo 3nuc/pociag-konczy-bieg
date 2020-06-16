@@ -471,6 +471,41 @@ public class ApiResource {
         return "removed";
     }
     
+    @DELETE
+    @Path("removeSong/{artistId}/{albumId}/{songId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteSong(@PathParam("artistId") String artistId, @PathParam("albumId")String albumId, @PathParam("songId") String songId) throws UnknownHostException{
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        DB database = mongoClient.getDB("artists");
+        boolean auth = database.authenticate("admin", "admin".toCharArray());
+        DBCollection collection = database.getCollection("artists");
+        BasicDBObject whereQuery = new BasicDBObject();
+        whereQuery.put("albums._id",albumId);
+        String json="{\"albums._id\":1}";
+        DBObject push = (DBObject) JSON.parse(json);
+        DBCursor cursor = collection.find(whereQuery,push);
+        String s = new String();
+        while (cursor.hasNext()) {
+            s+=cursor.next();
+        }
+        int albumIdCount=0; //sprawdza numer albumu u artysty
+        String[] words = s.split(" ");
+        for(int i=0;i<words.length;i++){
+            if(words[i].contains("_id"))
+                albumIdCount++;
+            if(words[i].contains(albumId))
+                break;
+        }
+        albumIdCount-=2; //numer albumu w danym artyscie
+        
+        ObjectId id = new ObjectId(artistId);
+        BasicDBObject whereQuery2 = new BasicDBObject();
+        whereQuery2.put("_id",id);
+        String json2="{$pull : {\"albums."+albumIdCount+".songs\" : {\"_id\":\""+songId+"\"}}}";
+        DBObject push2 = (DBObject) JSON.parse(json2);
+        collection.update(whereQuery2,push2);
+        return String.valueOf(albumIdCount);
+    }
     
     
     @GET
