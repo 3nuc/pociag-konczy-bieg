@@ -439,36 +439,53 @@ public class ApiResource {
     }
     
     @DELETE
-    @Path("removeAlbum/{albumId}")
+    @Path("removeAlbum/{artistId}/{albumId}")
     @Produces(MediaType.APPLICATION_JSON) //rozpierdala cala baze, jeszcze nie wiem dlaczego
-    public String deleteAlbum(@PathParam("albumId") String albumId) throws UnknownHostException{
+    public String deleteAlbum(@PathParam("artistId") String artistId, @PathParam("albumId") String albumId) throws UnknownHostException{
         MongoClient mongoClient = new MongoClient("localhost", 27017);
         DB database = mongoClient.getDB("artists");
         boolean auth = database.authenticate("admin", "admin".toCharArray());
         DBCollection collection = database.getCollection("artists");
         BasicDBObject whereQuery = new BasicDBObject();
         ObjectId id = new ObjectId(albumId);
-        whereQuery.put("albums._id",id);
-        DBCursor cursor = collection.find(whereQuery);
+        whereQuery.put("albums._id",albumId);
+        String json="{\"albums._id\":1}";
+        DBObject push = (DBObject) JSON.parse(json);
+        DBCursor cursor = collection.find(whereQuery,push);
         String s = new String();
         while (cursor.hasNext()) {
             s+=cursor.next();
         }
+//        return s;
+        
+        
         int labelCount=0; //sprawdza numer albumu u artysty
         String[] words = s.split(" ");
         for(int i=0;i<words.length;i++){
-            if(words[i].contains("label"))
+            if(words[i].contains("_id"))
                 labelCount++;
             if(words[i].contains(albumId))
                 break;
         }
-        System.out.println(s);
-//        String json = " 	{ \"$push\": { \"albums.$.songs."+songNo+".Comments\": {\"_id\":\""+commentId+"\",name: \""+name+"\", comment:\""+comment+"\"} } }";
-        String json = " ";
-        DBObject push = (DBObject) JSON.parse(json);
-        collection.update(whereQuery,push);
+        labelCount-=2; //bo id wykonawcy i policzy o 1 wiecej niz w tablicy temu -2 proste essa
         
-        return "removed";
+        
+        ObjectId id2 = new ObjectId(artistId);
+        BasicDBObject whereQuery2 = new BasicDBObject();
+        whereQuery2.put("_id",id2);
+        String json2="{$pull : {albums : {_id:\""+albumId+"\"}}}";
+        DBObject push2 = (DBObject) JSON.parse(json2);
+
+
+        collection.update(whereQuery2,push2);
+        
+//        return String.valueOf(albumIdCount);
+        
+//        System.out.println("labelCount: "+labelCount);
+        
+        
+        
+        return "removed album";
     }
     
     @DELETE
