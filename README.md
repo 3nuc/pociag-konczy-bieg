@@ -28,7 +28,7 @@ webresources/api/editArtistImage/{bandId}/{newImage} - edycja url zespolu
 
 webresources/api/editArtistName/{bandId}/{newName} - edycja nazwy
 
-webresources/api/editArtist - edycja artysty
+webresources/api/editArtist/{artistid} - edycja artysty
 
 body edycji: {
   "nazwa" : "lorem",
